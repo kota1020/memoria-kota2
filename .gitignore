@@ -1,0 +1,4 @@
+state/
+tasks/
+*.log
+.DS_Store
