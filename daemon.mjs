@@ -61,6 +61,20 @@ async function tick() {
   }
 }
 
+// 統合・忘却パス（1日1回・朝4時台の最初のtickで実行）
+let lastConsolidated = ''
+async function maybeConsolidate() {
+  const today = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10)
+  const hourJST = new Date(Date.now() + 9 * 3600e3).getUTCHours()
+  if (hourJST !== 4 || lastConsolidated === today) return
+  lastConsolidated = today
+  log('consolidation start')
+  try {
+    const { execFile } = await import('node:child_process')
+    await new Promise((res, rej) => execFile('/opt/homebrew/bin/node', [path.join(dir, 'consolidate.mjs')], { timeout: 10 * 60e3 }, (e, o) => e ? rej(e) : (log(`consolidation: ${String(o).trim()}`), res())))
+  } catch (e) { log(`consolidation ERROR: ${e.message}`) }
+}
+
 log(`daemon start (interval ${INTERVAL / 60000}min, model=${process.env.MEMORIA2_MODEL || 'default'})`)
 await tick()
-setInterval(tick, INTERVAL)
+setInterval(() => { tick(); maybeConsolidate() }, INTERVAL)

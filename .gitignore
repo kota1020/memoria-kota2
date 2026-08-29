@@ -22,3 +22,5 @@ MILESTONE-5-AI-MEMORY.md
 
 # 蛇口のフィード（各エージェントのデータ）
 faucet/feeds/
+search/index.json
+search/bin/
