@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 560" width="980" height="560" role="img" aria-label="memoria kota2 workflow"><rect width="980" height="560" fill="#ffffff"/>
+<polygon points="46,60 214,60 214,63 217,63 217,66 220,66 220,144 217,144 217,147 214,147 214,150 46,150 46,147 43,147 43,144 40,144 40,66 43,66 43,63 46,63" fill="#fff" stroke="#1a1a1a" stroke-width="1.5" stroke-linejoin="miter"/>
+<text x="130" y="95" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" font-weight="700" fill="#1a1a1a" text-anchor="middle">あなたの画面</text>
+<text x="130" y="118" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#8a8a8a" text-anchor="middle">(全ウィンドウ)</text>
+<polyline points="220,105 340,105" fill="none" stroke="#1a1a1a" stroke-width="1.5"/><polygon points="340,105 335,100 335,110" fill="#1a1a1a"/>
+<text x="280" y="88" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" font-weight="700" fill="#1a1a1a" text-anchor="middle">2秒ごと</text>
+<text x="280" y="128" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#8a8a8a" text-anchor="middle">機械キャプチャ</text>
+<text x="280" y="142" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#8a8a8a" text-anchor="middle">LLMなし・0円</text>
+<polygon points="346,60 524,60 524,63 527,63 527,66 530,66 530,144 527,144 527,147 524,147 524,150 346,150 346,147 343,147 343,144 340,144 340,66 343,66 343,63 346,63" fill="#fff" stroke="#1a1a1a" stroke-width="1.5" stroke-linejoin="miter"/>
+<text x="435" y="93" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" font-weight="700" fill="#1a1a1a" text-anchor="middle">生ログ</text>
+<text x="435" y="113" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#8a8a8a" text-anchor="middle">窓・中身(AX/OCR)</text>
+<text x="435" y="128" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#8a8a8a" text-anchor="middle">URL・場所</text>
+<polyline points="530,105 660,105" fill="none" stroke="#65a30d" stroke-width="1.5"/><polygon points="660,105 655,100 655,110" fill="#65a30d"/>
+<text x="595" y="88" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" font-weight="700" fill="#65a30d" text-anchor="middle">10分ごと</text>
+<text x="595" y="128" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#65a30d" text-anchor="middle">LLMが翻訳</text>
+<text x="595" y="142" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="10.5" font-weight="400" fill="#8a8a8a" text-anchor="middle">新しい動きがある時だけ</text>
+<polygon points="666,52 934,52 934,55 937,55 937,58 940,58 940,152 937,152 937,155 934,155 934,158 666,158 666,155 663,155 663,152 660,152 660,58 663,58 663,55 666,55" fill="#f3fbe7" stroke="#65a30d" stroke-width="1.5" stroke-linejoin="miter"/>
+<text x="800" y="82" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="14.5" font-weight="700" fill="#65a30d" text-anchor="middle">タスク（意味のある形）</text>
+<text x="800" y="104" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="400" fill="#3f6212" text-anchor="middle">「広告記事のレビュー[作業中]」</text>
+<text x="800" y="122" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#3f6212" text-anchor="middle">名前・区間・並行・完了状態</text>
+<text x="800" y="142" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" font-weight="700" fill="#65a30d" text-anchor="middle">実測精度 0.888 / タスク名 0.97</text>
+<polyline points="435,150 435,215 660,215" fill="none" stroke="#1a1a1a" stroke-width="1.5" stroke-dasharray="6 4"/><polygon points="660,215 655,210 655,220" fill="#1a1a1a"/>
+<text x="540" y="205" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#8a8a8a" text-anchor="middle">過去は聞かれた時だけ・45分刻みで翻訳</text>
+<polyline points="700,215 700,158" fill="none" stroke="#1a1a1a" stroke-width="1.5" stroke-dasharray="6 4"/><polygon points="700,158 695,163 705,163" fill="#1a1a1a"/>
+<polygon points="46,300 304,300 304,303 307,303 307,306 310,306 310,404 307,404 307,407 304,407 304,410 46,410 46,407 43,407 43,404 40,404 40,306 43,306 43,303 46,303" fill="#fff" stroke="#1a1a1a" stroke-width="1.5" stroke-linejoin="miter"/>
+<text x="175" y="330" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="14" font-weight="700" fill="#1a1a1a" text-anchor="middle">蛇口（faucet）</text>
+<text x="175" y="352" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="400" fill="#8a8a8a" text-anchor="middle">他のエージェントが1行で</text>
+<text x="175" y="368" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="400" fill="#8a8a8a" text-anchor="middle">「kotaの理解」を注ぐ</text>
+<text x="175" y="392" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#8a8a8a" text-anchor="middle">looksmax / CS / 会社の脳 …</text>
+<polygon points="356,300 614,300 614,303 617,303 617,306 620,306 620,404 617,404 617,407 614,407 614,410 356,410 356,407 353,407 353,404 350,404 350,306 353,306 353,303 356,303" fill="#fff" stroke="#1a1a1a" stroke-width="1.5" stroke-linejoin="miter"/>
+<text x="485" y="330" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="14" font-weight="700" fill="#1a1a1a" text-anchor="middle">統合・忘却</text>
+<text x="485" y="352" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="400" fill="#8a8a8a" text-anchor="middle">毎朝4時: 重複マージ＋</text>
+<text x="485" y="368" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="400" fill="#8a8a8a" text-anchor="middle">古い/矛盾する記憶を検出</text>
+<text x="485" y="392" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#8a8a8a" text-anchor="middle">意味検索の索引も再構築</text>
+<polygon points="666,282 934,282 934,285 937,285 937,288 940,288 940,422 937,422 937,425 934,425 934,428 666,428 666,425 663,425 663,422 660,422 660,288 663,288 663,285 666,285" fill="#fff" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="miter"/>
+<text x="800" y="314" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" font-weight="700" fill="#1a1a1a" text-anchor="middle">あなたのAIとの会話</text>
+<text x="800" y="338" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="400" fill="#8a8a8a" text-anchor="middle">毎回、話す前に自動で注入:</text>
+<text x="800" y="358" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" font-weight="700" fill="#1a1a1a" text-anchor="middle">今の画面 + 今のタスク</text>
+<text x="800" y="376" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" font-weight="700" fill="#1a1a1a" text-anchor="middle">+ 蛇口のフィード + 関連記憶</text>
+<text x="800" y="404" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" font-weight="700" fill="#65a30d" text-anchor="middle">→ 説明ゼロで文脈が通じる</text>
+<polyline points="800,158 800,282" fill="none" stroke="#65a30d" stroke-width="1.5"/><polygon points="800,282 795,277 805,277" fill="#65a30d"/>
+<text x="818" y="225" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#65a30d" text-anchor="start">自動注入</text>
+<polyline points="310,355 660,355" fill="none" stroke="#1a1a1a" stroke-width="1.5"/><polygon points="660,355 655,350 655,360" fill="#1a1a1a"/>
+<polyline points="485,300 485,255 745,255 745,282" fill="none" stroke="#8a8a8a" stroke-width="1.2"/><polygon points="745,282 740,277 750,277" fill="#8a8a8a"/>
+<text x="40" y="480" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="400" fill="#8a8a8a" text-anchor="start">コスト: キャプチャ=0円(Apple内蔵API) / 翻訳=Claudeサブスク内(API課金なし) / 全データはローカル、クラウド送信なし</text>
+<text x="40" y="502" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="400" fill="#8a8a8a" text-anchor="start">なぜ10分と45分? リアルタイムは10分刻み+前回の続きを持ち越し(未来を見ない因果処理)。過去のまとめ読みは45分=LLMが一度に読み切れて、タスクが3〜10個入る自然な塊。</text>
+<text x="40" y="524" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="400" fill="#8a8a8a" text-anchor="start">精度0.888は実データ16エピソード(12日分)のベンチで実測(検証一式は同梱のmemoria-lab設計に基づく)。</text></svg>
