@@ -1,4 +1,21 @@
+# v2自身のデータ
 state/
 tasks/
 *.log
 .DS_Store
+
+# v1から吸収したデータ層（個人データ・秘密を含むため、リポには絶対に入れない）
+kota/
+knowledge/
+connect/
+company-share/
+company-rollout/
+collector/
+docs/
+extension/
+scripts/
+supabase/
+tools/
+mini-live.sh
+status.sh
+MILESTONE-5-AI-MEMORY.md
