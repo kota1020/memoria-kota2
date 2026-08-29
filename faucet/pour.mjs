@@ -1,9 +1,9 @@
-// 蛇口（faucet）— どのエージェントも1行でkotaの理解をmemoriaに注げる共通の口
+// 蛇口（faucet）— どのエージェントも1行でユーザーの理解をmemoriaに注げる共通の口
 // 使い方:
 //   echo "内容" | node pour.mjs <agent名>            … feeds/<agent名>.md を上書き
 //   node pour.mjs <agent名> --file path.md           … ファイルから
-//   （リモートから）ssh kota2m@Mac "node ~/memoria-kota2/faucet/pour.mjs <agent名>" < 内容
-// ルール: 内容はそのエージェントが要約済みの「kotaについての今の理解」。
+//   （リモートから）ssh <user>@<mac> "node ~/memoria-kota2/faucet/pour.mjs <agent名>" < 内容
+// ルール: 内容はそのエージェントが要約済みの「ユーザーについての今の理解」。
 //         生ログを流し込まない。更新のたび全置換（追記じゃない）。
 import { writeFileSync, readFileSync, mkdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'

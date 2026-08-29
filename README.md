@@ -1,6 +1,6 @@
 # memoria kota ver 2
 
-**画面から「本人が実際にやったこと」を覚えて、AIエージェントに「今なんのタスクか」を翻訳して渡すローカルのメモリ層。**
+**画面から「あなたが実際にやったこと」を覚えて、AIエージェントに「今なんのタスクか」を翻訳して渡すローカルのメモリ層。**
 会話メモリ（本人が話したことしか覚えられない）と違い、行動そのものから記憶を作る。
 
 <p align="center">
@@ -9,14 +9,29 @@
 
 ## 仕組みを5行で
 
-1. **見る（0円・LLMなし）** — Mac内蔵API（CoreGraphics/アクセシビリティ/Vision OCR）が**2秒ごと**に画面を観察して生ログに記録
-2. **理解する（10分ごと）** — 新しい動きがあった時だけLLMが生ログを読み、「Diaを見てた」ではなく**「広告記事のレビュー[作業中]」**というタスクに翻訳（実測精度0.888・タスク名同定0.97）
-3. **思い出させる** — 翻訳済みタスク＋生の画面メモが**毎会話の頭に自動注入**される。過去は聞かれた時だけ**45分刻み**で翻訳（=LLMが一度に読み切れて、タスクが3〜10個入る自然な塊）
-4. **注がれる（蛇口）** — 他のエージェントが1行（`echo 理解 | node faucet/pour.mjs <名前>`）で本人の理解を注げる
+1. **見る（0円・LLMなし）** — 観測層が**2秒ごと**に画面を記録して生ログ（JSONL）を作る
+2. **理解する（10分ごと）** — 新しい動きがあった時だけLLMが生ログを読み、「ブラウザを見てた」ではなく**「広告記事のレビュー[作業中]」**というタスクに翻訳（実測精度0.888・タスク名同定0.97）
+3. **思い出させる** — 翻訳済みタスクが**毎会話の頭に自動注入**される。過去は聞かれた時だけ**45分刻み**で翻訳（=LLMが一度に読み切れて、タスクが3〜10個入る自然な塊）
+4. **注がれる（蛇口）** — 他のエージェントが1行（`echo 理解 | node faucet/pour.mjs <名前>`）でユーザーの理解を注げる
 5. **忘れる** — 毎朝4時に重複をマージし、古い/矛盾する記憶をLLMが検出して会話にフラグを流す
 
-コスト: キャプチャ0円 / 翻訳はClaudeサブスク内（API課金なし）/ データは全部ローカル・クラウド送信なし。
+コスト: キャプチャ0円 / 翻訳は`claude`CLI経由＝Claudeサブスク内（API課金なし）/ データは全部ローカル・クラウド送信なし。
 意味検索はApple内蔵の埋め込みモデル（512次元・完全ローカル）: `node recall.mjs <質問>`。
+
+## 使い方
+
+```bash
+git clone https://github.com/kota1020/memoria-kota2 ~/memoria-kota2
+cd ~/memoria-kota2
+export MEMORIA_SRC_LOG=~/path/to/activity-log.jsonl   # あなたの観測層の生ログ
+./install.sh                                          # 常駐（launchd）として起動
+./faucet/faucet.sh                                    # 注入内容の確認
+```
+
+**入力の契約**：生ログは1行1イベントのJSONL。`{"at":"<ISO時刻>","rows":[{"mon":"モニタ名","app":"アプリ","title":"窓タイトル","url":"...","idle":0,"ctx":"画面の中身テキスト"}]}`。
+どんな観測手段でもこの形にすれば翻訳層はそのまま動く（作者はmacOSのCoreGraphics/アクセシビリティ/Vision OCRで2秒ごとに生成）。
+
+**ユーザー固有の文脈**（働き方・よく使うツール等）は `config/profile.md` に書くと翻訳精度が上がる。configはgitignore対象＝あなたの情報がリポに入ることはない。
 
 ## 構成
 
@@ -26,22 +41,10 @@
 - `consolidate.mjs` — 統合・忘却パス（重複マージ＋矛盾検出→蛇口注入）
 - `faucet/` — 蛇口。pour.mjs（注ぎ口）と faucet.sh（会話への注入）
 - `inject.sh` — 翻訳済みタスクのプロンプト注入（30分鮮度ゲート）
-- `parser/` — rubric.md（タスク定義の正典・実験7ラウンドで検証）/ render.mjs / interpret.mjs
+- `parser/` — rubric.md（タスク定義の正典・16エピソードのベンチで検証）/ render.mjs / interpret.mjs
 - `search/` — Apple埋め込み（embed.swift）＋意味索引
 
-`kota/ knowledge/ connect/ company-share/` 等は個人データ層のため**リポには含まれない**（.gitignore）。
-このリポはプロダクトコードのみ。
-
-## 運用メモ
-
-```bash
-launchctl kickstart -k gui/501/com.memoria.kota2   # デーモン再起動
-tail -f state/daemon.log                            # 動作確認
-node recall.mjs "返金のルール"                        # 意味で引く
-node ondemand.mjs --yesterday                       # 昨日を丸ごと翻訳
-```
-
-環境変数: `MEMORIA2_MODEL`（モデル上書き。既定=Fable級）/ `MEMORIA2_INTERVAL_MS` / `MEMORIA_SRC_LOG`
+環境変数: `MEMORIA_SRC_LOG`（生ログの場所）/ `MEMORIA2_MODEL`（モデル上書き）/ `MEMORIA2_INTERVAL_MS`
 
 ## License
 

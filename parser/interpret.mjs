@@ -7,12 +7,16 @@ import path from 'node:path'
 
 const dir = path.dirname(fileURLToPath(import.meta.url))
 const RUBRIC = readFileSync(path.join(dir, 'rubric.md'), 'utf8')
+// 任意: config/profile.md（gitignore対象）にユーザー固有の文脈を書くと翻訳精度が上がる
+let PROFILE = ''
+try { PROFILE = readFileSync(path.join(dir, '..', 'config', 'profile.md'), 'utf8') } catch {}
 const CLAUDE = process.env.MEMORIA2_CLAUDE_BIN || 'claude'
 const MODEL = process.env.MEMORIA2_MODEL || ''  // 空=セッション既定（fable級）。品質実測: fable級0.888/sonnet0.827/haiku0.741
 
 function buildPrompt({ eventsText, openTasks, mode, windowLabel }) {
   const causal = mode === 'stream'
-  return `あなたはmemoriaのタスクパーサー v2（memoria-labで実証済みの本番形）。ユーザー(kota)の画面行動ログを「タスク」に翻訳する。出力は**JSONのみ**（前後に文章・コードフェンス禁止）。
+  return `あなたはmemoriaのタスクパーサー v2。ユーザーの画面行動ログを「タスク」に翻訳する。出力は**JSONのみ**（前後に文章・コードフェンス禁止）。
+${PROFILE ? `\n## ユーザーの文脈（翻訳の精度向上用）\n${PROFILE}\n` : ''}
 
 ## 入力ログ（1行=1イベント、時刻はJST）
 対象窓: ${windowLabel}

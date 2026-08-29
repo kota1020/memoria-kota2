@@ -29,7 +29,7 @@ function writeMemo(state, recentClosed) {
   const open = state.open_tasks.map(t => `- [${t.status}] ${t.name} — ${t.goal || ''}（最終活動 ${jstHM(t.last_active)}）`).join('\n')
   const closed = recentClosed.map(t => `- [${t.status} ${jstHM(t.spans?.at(-1)?.[1])}] ${t.name}`).join('\n')
   writeFileSync(MEMO, `# いまのタスク（memoria kota v2・LLM翻訳・自動更新）
-_行動ログをタスク単位に翻訳したもの（実測精度: 同定0.97/全体0.89）。「今何のタスク？」「さっきの続き」はこれで即答する。生ログはmemoria-kota側。_
+_行動ログをタスク単位に翻訳したもの（実測精度: 同定0.97/全体0.89）。「今何のタスク？」「さっきの続き」はこれで即答する。生ログは観測層側。_
 
 ## 走行中・注視中のタスク
 ${open || '- （なし）'}
@@ -71,7 +71,7 @@ async function maybeConsolidate() {
   log('consolidation start')
   try {
     const { execFile } = await import('node:child_process')
-    await new Promise((res, rej) => execFile('/opt/homebrew/bin/node', [path.join(dir, 'consolidate.mjs')], { timeout: 10 * 60e3 }, (e, o) => e ? rej(e) : (log(`consolidation: ${String(o).trim()}`), res())))
+    await new Promise((res, rej) => execFile(process.execPath, [path.join(dir, 'consolidate.mjs')], { timeout: 10 * 60e3 }, (e, o) => e ? rej(e) : (log(`consolidation: ${String(o).trim()}`), res())))
   } catch (e) { log(`consolidation ERROR: ${e.message}`) }
 }
 
