@@ -19,3 +19,6 @@ tools/
 mini-live.sh
 status.sh
 MILESTONE-5-AI-MEMORY.md
+
+# 蛇口のフィード（各エージェントのデータ）
+faucet/feeds/

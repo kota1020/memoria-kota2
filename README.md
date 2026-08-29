@@ -29,3 +29,12 @@ node ondemand.mjs --yesterday                       # 過去の翻訳
 ```
 
 環境変数: `MEMORIA2_MODEL`（モデル上書き。既定=セッション既定のfable級）/ `MEMORIA2_INTERVAL_MS` / `MEMORIA_SRC_LOG`
+
+## ④ 蛇口（faucet）— エージェント接続の共通口
+どのエージェントも1行で「kotaについての今の理解」をmemoriaへ注げる:
+```bash
+echo "…理解の要約…" | node ~/memoria-kota2/faucet/pour.mjs <agent名>
+# リモート(mini等)から: ssh kota2m@Mac "node ~/memoria-kota2/faucet/pour.mjs <agent名>" < 内容
+```
+鮮度のあるフィードだけが毎会話に `<memoria-faucet agent="…">` として自動注入される。
+接続済み: looksmax（miniのLook Maxエージェント）/ company-brain（会社共有脳）。フィード実体はgitignore。
