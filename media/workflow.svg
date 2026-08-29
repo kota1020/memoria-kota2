@@ -25,8 +25,8 @@
 <polygon points="46,300 304,300 304,303 307,303 307,306 310,306 310,404 307,404 307,407 304,407 304,410 46,410 46,407 43,407 43,404 40,404 40,306 43,306 43,303 46,303" fill="#fff" stroke="#1a1a1a" stroke-width="1.5" stroke-linejoin="miter"/>
 <text x="175" y="330" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="14" font-weight="700" fill="#1a1a1a" text-anchor="middle">蛇口（faucet）</text>
 <text x="175" y="352" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="400" fill="#8a8a8a" text-anchor="middle">他のエージェントが1行で</text>
-<text x="175" y="368" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="400" fill="#8a8a8a" text-anchor="middle">「kotaの理解」を注ぐ</text>
-<text x="175" y="392" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#8a8a8a" text-anchor="middle">looksmax / CS / 会社の脳 …</text>
+<text x="175" y="368" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="400" fill="#8a8a8a" text-anchor="middle">「ユーザーの理解」を注ぐ</text>
+<text x="175" y="392" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#8a8a8a" text-anchor="middle">健康 / 仕事 / チームの脳 など</text>
 <polygon points="356,300 614,300 614,303 617,303 617,306 620,306 620,404 617,404 617,407 614,407 614,410 356,410 356,407 353,407 353,404 350,404 350,306 353,306 353,303 356,303" fill="#fff" stroke="#1a1a1a" stroke-width="1.5" stroke-linejoin="miter"/>
 <text x="485" y="330" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="14" font-weight="700" fill="#1a1a1a" text-anchor="middle">統合・忘却</text>
 <text x="485" y="352" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="400" fill="#8a8a8a" text-anchor="middle">毎朝4時: 重複マージ＋</text>
