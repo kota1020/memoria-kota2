@@ -18,6 +18,24 @@
 コスト: キャプチャ0円 / 翻訳は`claude`CLI経由＝Claudeサブスク内（API課金なし）/ データは全部ローカル・クラウド送信なし。
 意味検索はApple内蔵の埋め込みモデル（512次元・完全ローカル）: `node recall.mjs <質問>`。
 
+## デモ（APIキー不要・30秒）
+
+翻訳層の肝＝**根拠グラウンディング**を、LLMを呼ばずその場で体験できる。翻訳AIは根拠が薄いと周囲の文脈から尤もらしい属性を発明しがち（例: コーディングの合間に見た料理動画を「プログラミング学習動画」と誤ラベル）。それを出口で機械的に落とす様子を見せる。
+
+```bash
+node demo/grounding-demo.mjs
+```
+
+```
+── 採用されたタスク（evidenceがログに実在）──
+  ✓ GitHub PR #482 のflakyテスト修正
+  ✓ 認証ミドルウェアのリファクタ
+── 落とされた無根拠タスク（発明とみなして除去）──
+  ✗ プログラミング学習用YouTube動画の視聴  [evidence-not-in-log, cover=0.00]
+```
+
+全タスクは**ログから一字一句コピーしたevidence**を持たねばならず、ログに実在しないタスクは発明とみなして自動的に落とす（単語フィルタではなく「紐付けの有無」で判定）。
+
 ## 使い方
 
 ```bash
@@ -41,7 +59,8 @@ export MEMORIA_SRC_LOG=~/path/to/activity-log.jsonl   # あなたの観測層の
 - `consolidate.mjs` — 統合・忘却パス（重複マージ＋矛盾検出→蛇口注入）
 - `faucet/` — 蛇口。pour.mjs（注ぎ口）と faucet.sh（会話への注入）
 - `inject.sh` — 翻訳済みタスクのプロンプト注入（30分鮮度ゲート）
-- `parser/` — rubric.md（タスク定義の正典・16エピソードのベンチで検証）/ render.mjs / interpret.mjs
+- `parser/` — rubric.md（タスク定義の正典・16エピソードのベンチで検証）/ render.mjs / interpret.mjs / grounding.mjs（無根拠タスクを落とす出口ガード）
+- `demo/` — grounding-demo.mjs（APIキー不要でグラウンディングを体験）
 - `search/` — Apple埋め込み（embed.swift）＋意味索引
 
 環境変数: `MEMORIA_SRC_LOG`（生ログの場所）/ `MEMORIA2_MODEL`（モデル上書き）/ `MEMORIA2_INTERVAL_MS`

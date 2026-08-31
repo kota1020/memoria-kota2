@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 560" width="980" height="560" role="img" aria-label="memoria kota2 workflow"><rect width="980" height="560" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 584" width="980" height="584" role="img" aria-label="memoria kota2 workflow"><rect width="980" height="584" fill="#ffffff"/>
 <polygon points="46,60 214,60 214,63 217,63 217,66 220,66 220,144 217,144 217,147 214,147 214,150 46,150 46,147 43,147 43,144 40,144 40,66 43,66 43,63 46,63" fill="#fff" stroke="#1a1a1a" stroke-width="1.5" stroke-linejoin="miter"/>
 <text x="130" y="95" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" font-weight="700" fill="#1a1a1a" text-anchor="middle">あなたの画面</text>
 <text x="130" y="118" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11" font-weight="400" fill="#8a8a8a" text-anchor="middle">(全ウィンドウ)</text>
@@ -44,4 +44,5 @@
 <polyline points="485,300 485,255 745,255 745,282" fill="none" stroke="#8a8a8a" stroke-width="1.2"/><polygon points="745,282 740,277 750,277" fill="#8a8a8a"/>
 <text x="40" y="480" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="400" fill="#8a8a8a" text-anchor="start">コスト: キャプチャ=0円(Apple内蔵API) / 翻訳=Claudeサブスク内(API課金なし) / 全データはローカル、クラウド送信なし</text>
 <text x="40" y="502" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="400" fill="#8a8a8a" text-anchor="start">なぜ10分と45分? リアルタイムは10分刻み+前回の続きを持ち越し(未来を見ない因果処理)。過去のまとめ読みは45分=LLMが一度に読み切れて、タスクが3〜10個入る自然な塊。</text>
-<text x="40" y="524" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="400" fill="#8a8a8a" text-anchor="start">精度0.888は実データ16エピソード(12日分)のベンチで実測(検証一式は同梱のmemoria-lab設計に基づく)。</text></svg>
+<text x="40" y="524" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="400" fill="#8a8a8a" text-anchor="start">精度0.888は実データ16エピソード(12日分)のベンチで実測(検証一式は同梱のmemoria-lab設計に基づく)。</text>
+<text x="40" y="546" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11.5" font-weight="400" fill="#8a8a8a" text-anchor="start">根拠グラウンディング: 各タスクはログから一字一句コピーしたevidence必須。ログに実在しない発明タスクは出口で自動的に落とす(周囲の文脈からの属性の捏造を防ぐ)。</text></svg>
