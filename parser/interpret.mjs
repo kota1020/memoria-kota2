@@ -4,6 +4,7 @@ import { execFile } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import { enforceGrounding } from './grounding.mjs'
 
 const dir = path.dirname(fileURLToPath(import.meta.url))
 const RUBRIC = readFileSync(path.join(dir, 'rubric.md'), 'utf8')
@@ -33,9 +34,14 @@ ${JSON.stringify(openTasks ?? [], null, 1)}
 
 ${RUBRIC}
 
+## 根拠グラウンディング（最重要・全タスク必須）
+- 全タスクに evidence を必ず付ける。evidence は**入力ログから一字一句コピーした実在の断片**（ウィンドウ名/タブ名/URL/タイトル/検索語）。言い換え・要約・創作は禁止
+- name・goal・属性は evidence に書いてある事実だけで構成する。ログに無い分類（「◯◯系」「専門家」等）や続き判定を、周囲の文脈から推測して足さない
+- 根拠が薄い時は発明せず、画面表記そのままの素朴な記述に留める（evidenceが出せないタスクは出力しない）
+
 ## 出力形式（JSONのみ）
-{"open_tasks":[{"id":"t1","name":"具体的な日本語タスク名","goal":"1文","started":"<ISO JST>","last_active":"<ISO JST>","apps":["Ghostty"],"status":"ongoing"}],
- "closed_tasks":[{"id":"t2","name":"…","goal":"1文","spans":[["<ISO JST開始>","<ISO JST終了>"]],"apps":["Dia"],"cross_app":false,"status":"done|paused|ongoing","evidence":"根拠1行"}]}`
+{"open_tasks":[{"id":"t1","name":"具体的な日本語タスク名","goal":"1文","started":"<ISO JST>","last_active":"<ISO JST>","apps":["Ghostty"],"status":"ongoing","evidence":"ログからコピーした実在断片"}],
+ "closed_tasks":[{"id":"t2","name":"…","goal":"1文","spans":[["<ISO JST開始>","<ISO JST終了>"]],"apps":["Dia"],"cross_app":false,"status":"done|paused|ongoing","evidence":"ログからコピーした実在断片"}]}`
 }
 
 export function interpret(opts) {
@@ -51,7 +57,12 @@ export function interpret(opts) {
         if (a < 0 || b <= a) return reject(new Error(`no JSON in output: ${s.slice(0, 200)}`))
         try {
           const j = JSON.parse(s.slice(a, b + 1))
-          resolve({ open_tasks: j.open_tasks ?? [], closed_tasks: j.closed_tasks ?? [] })
+          const grounded = enforceGrounding({ open_tasks: j.open_tasks ?? [], closed_tasks: j.closed_tasks ?? [] }, opts.eventsText)
+          if (grounded.dropped.length) {
+            process.stderr.write(`[grounding] dropped ${grounded.dropped.length} 無根拠タスク: ` +
+              grounded.dropped.map(d => `${d.name}(${d.reason})`).join(' / ') + '\n')
+          }
+          resolve({ open_tasks: grounded.open_tasks, closed_tasks: grounded.closed_tasks, dropped: grounded.dropped })
         } catch (e) { reject(new Error(`bad JSON: ${e.message}`)) }
       })
     child.stdin.write(prompt)

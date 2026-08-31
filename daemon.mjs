@@ -55,7 +55,7 @@ async function tick() {
     const next = { open_tasks: r.open_tasks, last_processed: events.at(-1).t, updated: new Date().toISOString() }
     writeFileSync(STATE + '.tmp', JSON.stringify(next, null, 1)); renameSync(STATE + '.tmp', STATE)
     writeMemo(next, r.closed_tasks)
-    log(`ok: open=${r.open_tasks.length} closed=${r.closed_tasks.length}`)
+    log(`ok: open=${r.open_tasks.length} closed=${r.closed_tasks.length}${r.dropped?.length ? ` grounding-dropped=${r.dropped.length}` : ''}`)
   } catch (e) {
     log(`ERROR: ${e.message}`)  // 失敗時はlast_processedを進めない＝次回リトライ
   }
