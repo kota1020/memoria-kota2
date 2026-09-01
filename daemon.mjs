@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { loadEvents, renderEvents } from './parser/render.mjs'
 import { interpret } from './parser/interpret.mjs'
+import { daySummary } from './recall.mjs'
 
 const dir = path.dirname(fileURLToPath(import.meta.url))
 const STATE = path.join(dir, 'state/open-tasks.json')
@@ -28,10 +29,14 @@ const jstHM = (iso) => { try { return new Date(Date.parse(iso)).toLocaleTimeStri
 // 先回り（詰まり検知）: 長く続いてるオープンタスク／今日何度も再開したタスクを nudge として出す。
 // 断定でなく「まだ続いてる？まとめる？」の柔らかい合図。外しても脱線しないよう控えめに。
 const STUCK_MIN = Number(process.env.MEMORIA2_STUCK_MIN ?? 45)   // 連続滞在がこれを超えたら長時間フラグ
+// 監視・巡回系は長時間・頻繁な再開が「正常」なので詰まり判定から除外（誤爆防止）。
+// 判定は実タスク名/目的の語に基づく＝捏造でなく、書いてある事実からの分類。
+const isMonitoring = (t) => /監視|巡回|監督|検品|見張|watch|monitor|ウォッチ/i.test(`${t.name} ${t.goal || ''}`)
 function detectNudges(state) {
   const out = []
   const now = Date.now()
   for (const t of state.open_tasks ?? []) {
+    if (isMonitoring(t)) continue
     const started = Date.parse(t.started ?? t.last_active ?? '')
     const last = Date.parse(t.last_active ?? '')
     if (!started || !last) continue
@@ -40,10 +45,11 @@ function detectNudges(state) {
       out.push(`- 「${t.name}」を${mins >= 120 ? `${Math.floor(mins / 60)}時間${mins % 60}分` : `${mins}分`}続けています。区切る／まとめる／次へ、で助けられるかも`)
     }
   }
-  // 今日すでに何度も中断→再開しているタスク（再燃＝詰まりの兆候）
+  // 今日すでに何度も中断→再開しているタスク（再燃＝詰まりの兆候・監視系は除く）
   const today = new Date(now + 9 * 3600e3).toISOString().slice(0, 10)
   const reopen = {}
   for (const l of readIndexTail(400)) {
+    if (isMonitoring(l)) continue
     const d = (l.spans?.at(-1)?.[1] || l.closed_at || '')
     if (String(d).slice(0, 10) !== today) continue
     reopen[l.name] = (reopen[l.name] || 0) + 1
@@ -52,6 +58,16 @@ function detectNudges(state) {
     if (n >= 3 && !out.some(o => o.includes(name))) out.push(`- 「${name}」に今日${n}回戻っています。行ったり来たりで止まっていないか`)
   }
   return out.slice(0, 3)
+}
+
+// #4 今日の時間の使い方を注入に自動で差し込む（監視系・放置spanは除外済み・上位のみ）
+function todayLine() {
+  const jst = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10)
+  const rows = daySummary(jst).filter(r => !isMonitoring(r))
+  if (!rows.length) return ''
+  const fmt = (m) => m >= 60 ? `${Math.floor(m / 60)}時間${m % 60 ? `${m % 60}分` : ''}` : `${m}分`
+  const top = rows.slice(0, 4).map(r => `${r.name.slice(0, 22)}（${fmt(r.mins)}）`).join(' / ')
+  return `\n## 今日の時間の使い方（自動・実作業のみ）\n- ${top}`
 }
 function readIndexTail(n) {
   try { return readFileSync(INDEX, 'utf8').trim().split('\n').slice(-n).map(l => { try { return JSON.parse(l) } catch { return null } }).filter(Boolean) } catch { return [] }
@@ -70,7 +86,7 @@ ${open || '- （なし）'}
 
 ## 直近に完了/中断したタスク
 ${closed || '- （なし）'}
-${nudges.length ? `\n## 先回り（そっと差し出す・押し付けない）\n${nudges.join('\n')}` : ''}
+${nudges.length ? `\n## 先回り（そっと差し出す・押し付けない）\n${nudges.join('\n')}` : ''}${todayLine()}
 `)
 }
 

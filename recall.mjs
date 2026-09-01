@@ -31,6 +31,7 @@ export function recall(query, limit = 8) {
 
 // 時間の巻き戻し: 指定JST日の「何に時間を使ったか」をタスク別合計で返す（#4）
 // spansの各区間がその日に重なった分だけ加算。返りは [{name, mins, status}] 降順。
+const MAX_SPAN_MS = Number(process.env.MEMORIA2_MAX_SPAN_H ?? 6) * 3600e3  // これを超える単一spanは「開きっぱなし」とみなし実作業時間に数えない
 export function daySummary(jstDate) {
   const dayStart = Date.parse(jstDate + 'T00:00:00+09:00')
   const dayEnd = dayStart + 24 * 3600e3
@@ -42,6 +43,7 @@ export function daySummary(jstDate) {
       const t = JSON.parse(l)
       let mins = 0
       for (const [s, e] of t.spans ?? []) {
+        if (Date.parse(e) - Date.parse(s) > MAX_SPAN_MS) continue  // 徹夜またぎ等の放置spanは除外
         const a = Math.max(Date.parse(s), dayStart), b = Math.min(Date.parse(e), dayEnd)
         if (b > a) mins += (b - a) / 60000
       }
