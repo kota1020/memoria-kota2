@@ -25,17 +25,52 @@ function loadState() {
 }
 const jstHM = (iso) => { try { return new Date(Date.parse(iso)).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Tokyo' }) } catch { return '' } }
 
+// 先回り（詰まり検知）: 長く続いてるオープンタスク／今日何度も再開したタスクを nudge として出す。
+// 断定でなく「まだ続いてる？まとめる？」の柔らかい合図。外しても脱線しないよう控えめに。
+const STUCK_MIN = Number(process.env.MEMORIA2_STUCK_MIN ?? 45)   // 連続滞在がこれを超えたら長時間フラグ
+function detectNudges(state) {
+  const out = []
+  const now = Date.now()
+  for (const t of state.open_tasks ?? []) {
+    const started = Date.parse(t.started ?? t.last_active ?? '')
+    const last = Date.parse(t.last_active ?? '')
+    if (!started || !last) continue
+    const mins = Math.round((last - started) / 60000)
+    if (t.status === 'ongoing' && mins >= STUCK_MIN && (now - last) < 20 * 60e3) {
+      out.push(`- 「${t.name}」を${mins >= 120 ? `${Math.floor(mins / 60)}時間${mins % 60}分` : `${mins}分`}続けています。区切る／まとめる／次へ、で助けられるかも`)
+    }
+  }
+  // 今日すでに何度も中断→再開しているタスク（再燃＝詰まりの兆候）
+  const today = new Date(now + 9 * 3600e3).toISOString().slice(0, 10)
+  const reopen = {}
+  for (const l of readIndexTail(400)) {
+    const d = (l.spans?.at(-1)?.[1] || l.closed_at || '')
+    if (String(d).slice(0, 10) !== today) continue
+    reopen[l.name] = (reopen[l.name] || 0) + 1
+  }
+  for (const [name, n] of Object.entries(reopen)) {
+    if (n >= 3 && !out.some(o => o.includes(name))) out.push(`- 「${name}」に今日${n}回戻っています。行ったり来たりで止まっていないか`)
+  }
+  return out.slice(0, 3)
+}
+function readIndexTail(n) {
+  try { return readFileSync(INDEX, 'utf8').trim().split('\n').slice(-n).map(l => { try { return JSON.parse(l) } catch { return null } }).filter(Boolean) } catch { return [] }
+}
+
 function writeMemo(state, recentClosed) {
   const open = state.open_tasks.map(t => `- [${t.status}] ${t.name} — ${t.goal || ''}（最終活動 ${jstHM(t.last_active)}）`).join('\n')
   const closed = recentClosed.map(t => `- [${t.status} ${jstHM(t.spans?.at(-1)?.[1])}] ${t.name}`).join('\n')
+  const nudges = detectNudges(state)
   writeFileSync(MEMO, `# いまのタスク（memoria kota v2・LLM翻訳・自動更新）
-_行動ログをタスク単位に翻訳したもの（実測精度: 同定0.97/全体0.89）。「今何のタスク？」「さっきの続き」はこれで即答する。生ログは観測層側。_
+_行動ログをタスク単位に翻訳したもの（実測精度: 同定0.97/全体0.89）。「今/さっき何してた」系はこれで即答する。生ログは観測層側。_
+_ただし走行中タスクは**推定**。ユーザーの新規発話が別件なら、続き前提で塗らずそちらを優先する（外した推定で会話を脱線させない）。_
 
 ## 走行中・注視中のタスク
 ${open || '- （なし）'}
 
 ## 直近に完了/中断したタスク
 ${closed || '- （なし）'}
+${nudges.length ? `\n## 先回り（そっと差し出す・押し付けない）\n${nudges.join('\n')}` : ''}
 `)
 }
 

@@ -24,7 +24,7 @@ import { createServer } from 'node:http'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
-import { recall, tasksAt } from './recall.mjs'
+import { recall, tasksAt, daySummary } from './recall.mjs'
 
 const dir = path.dirname(fileURLToPath(import.meta.url))
 const PORT = Number(process.env.MEMORIA2_API_PORT || 4319)
@@ -98,6 +98,12 @@ const server = createServer((req, res) => {
       return send(res, 200, { at: t, tasks: tasksAt(atMs).map(x => shapeTask(x, level)) })
     }
 
+    if (p === '/day') {  // 時間の巻き戻し: 指定JST日に何に時間を使ったか（#4）
+      const jst = url.searchParams.get('date') || new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10)
+      const rows = daySummary(jst).map(r => ({ name: level >= 1 ? r.name : r.name.slice(0, 40), mins: r.mins, status: r.status }))
+      return send(res, 200, { date: jst, total_min: rows.reduce((s, r) => s + r.mins, 0), tasks: rows })
+    }
+
     if (p === '/context') {
       return send(res, 200, {
         disclosure: url.searchParams.get('disclosure') || 'context',
@@ -107,7 +113,7 @@ const server = createServer((req, res) => {
       })
     }
 
-    return send(res, 404, { error: 'not found', endpoints: ['/health', '/tasks', '/recall?q=', '/at?t=', '/context'] })
+    return send(res, 404, { error: 'not found', endpoints: ['/health', '/tasks', '/recall?q=', '/at?t=', '/day?date=', '/context'] })
   } catch (e) {
     send(res, 500, { error: String(e && e.message || e) })
   }

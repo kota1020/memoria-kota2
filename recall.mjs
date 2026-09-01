@@ -29,6 +29,32 @@ export function recall(query, limit = 8) {
   }))
 }
 
+// 時間の巻き戻し: 指定JST日の「何に時間を使ったか」をタスク別合計で返す（#4）
+// spansの各区間がその日に重なった分だけ加算。返りは [{name, mins, status}] 降順。
+export function daySummary(jstDate) {
+  const dayStart = Date.parse(jstDate + 'T00:00:00+09:00')
+  const dayEnd = dayStart + 24 * 3600e3
+  const acc = new Map()
+  let lines = []
+  try { lines = readFileSync(path.join(dir, 'tasks/tasks-index.jsonl'), 'utf8').trim().split('\n') } catch { return [] }
+  for (const l of lines) {
+    try {
+      const t = JSON.parse(l)
+      let mins = 0
+      for (const [s, e] of t.spans ?? []) {
+        const a = Math.max(Date.parse(s), dayStart), b = Math.min(Date.parse(e), dayEnd)
+        if (b > a) mins += (b - a) / 60000
+      }
+      if (mins < 1) continue
+      const cur = acc.get(t.name) || { name: t.name, mins: 0, status: t.status }
+      cur.mins += mins
+      acc.set(t.name, cur)
+    } catch {}
+  }
+  return [...acc.values()].map(x => ({ ...x, mins: Math.round(x.mins) })).sort((a, b) => b.mins - a.mins)
+}
+const fmtMin = (m) => m >= 60 ? `${Math.floor(m / 60)}時間${m % 60}分` : `${m}分`
+
 // 指定JST時刻に走っていたタスク（サービスからも呼べる純関数）
 export function tasksAt(atMs) {
   const out = []
@@ -50,6 +76,15 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   if (args[0] === '--at' && args[1]) {
     const at = Date.parse(args[1].replace(' ', 'T') + '+09:00')
     for (const t of tasksAt(at)) console.log(`[${t.status}] ${t.name}`)
+    process.exit(0)
+  }
+  if (args[0] === '--today' || args[0] === '--day') {
+    const jst = args[0] === '--day' && args[1] ? args[1] : new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10)
+    const rows = daySummary(jst)
+    if (!rows.length) { console.log(`${jst}: 記録なし`); process.exit(0) }
+    const total = rows.reduce((s, r) => s + r.mins, 0)
+    console.log(`${jst} — 何に時間を使ったか（合計 ${fmtMin(total)}）`)
+    for (const r of rows) console.log(`  ${fmtMin(r.mins).padStart(9)}  [${r.status}] ${r.name.slice(0, 64)}`)
     process.exit(0)
   }
   const q = args.join(' ')
