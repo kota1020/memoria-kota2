@@ -36,6 +36,30 @@ node demo/grounding-demo.mjs
 
 全タスクは**ログから一字一句コピーしたevidence**を持たねばならず、ログに実在しないタスクは発明とみなして自動的に落とす（単語フィルタではなく「紐付けの有無」で判定）。
 
+## read API（読）— 外部アプリ/エージェントが理解を問い合わせる口
+
+Screenpipe型のAPIに相当するが、**生フレーム/生OCRは出さない**。返すのは翻訳済みの「理解」だけ（タスク・文脈・意味検索）＝あなたの画面そのものでなく「何をしていたか」。`install.sh` が `127.0.0.1:4319` に常駐サービスとして立てる。
+
+```bash
+node server.mjs                       # 単発起動（既定 127.0.0.1:4319）
+curl localhost:4319/tasks             # いま走行/注視中のタスク
+curl "localhost:4319/recall?q=$(python3 -c 'import urllib.parse;print(urllib.parse.quote("先週のリサーチ"))')"
+curl "localhost:4319/at?t=2026-09-01T19:16:00"   # その時刻に何をしていたか
+curl localhost:4319/context           # 今の注入コンテキストをまとめてJSONで
+```
+
+| エンドポイント | 返すもの |
+|---|---|
+| `GET /health` | 稼働確認 |
+| `GET /tasks` | いま走行/注視中のタスク |
+| `GET /recall?q=&limit=` | 意味検索（言い換えでも当たる） |
+| `GET /at?t=<ISO JST>` | 指定時刻に走っていたタスク |
+| `GET /context` | 今のタスク＋画面の見出し（生OCRは除く） |
+
+**開示ダイヤル** `?disclosure=intent|context|full`（既定 `context`）: `intent`=名前と状態だけ / `context`=+goal/apps/期間 / `full`=+evidence（URL等を含む身内向け）。粒度を1本のダイヤルで絞れる＝A2Aの開示思想と一致。
+
+認証は既定で無し（localhost束縛のみ）。`MEMORIA2_API_TOKEN` を設定すると `Authorization: Bearer <token>` 必須になる。外部公開は `MEMORIA2_API_HOST=0.0.0.0` を明示した時だけ。
+
 ## 使い方
 
 ```bash
@@ -55,7 +79,8 @@ export MEMORIA_SRC_LOG=~/path/to/activity-log.jsonl   # あなたの観測層の
 
 - `daemon.mjs` — 常駐。10分ごとに新イベントを翻訳（動きなし/離席中はLLMを呼ばない）＋毎朝4時に統合パス
 - `ondemand.mjs` — 過去区間を45分刻みで翻訳（`--hours 3` / `--yesterday` / JST範囲指定）
-- `recall.mjs` — 意味検索（`--rebuild`で索引再構築 / `--at "JST"`で時刻検索）
+- `recall.mjs` — 意味検索。CLIとしても、read APIのライブラリ（`recall()`/`tasksAt()`）としても使える（`--rebuild`で索引再構築 / `--at "JST"`で時刻検索）
+- `server.mjs` — read API（読）。外部アプリ/エージェントがタスク・文脈・意味検索を問い合わせる常駐サービス。開示ダイヤル付き
 - `consolidate.mjs` — 統合・忘却パス（重複マージ＋矛盾検出→蛇口注入）
 - `faucet/` — 蛇口。pour.mjs（注ぎ口）と faucet.sh（会話への注入）
 - `inject.sh` — 翻訳済みタスクのプロンプト注入（30分鮮度ゲート）
