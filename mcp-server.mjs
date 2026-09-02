@@ -276,6 +276,13 @@ function requiredString(args, key, max) {
   if (typeof value !== 'string' || !value.trim() || value.length > max) throw new Error(`invalid_${key}`)
   return value.trim()
 }
+async function apiGet(pathname, params) {
+  const url = new URL(pathname, apiBase)
+  for (const [k, v] of Object.entries(params)) if (v !== '' && v != null) url.searchParams.set(k, String(v))
+  const response = await fetch(url, { signal: AbortSignal.timeout(3000) })
+  if (!response.ok) throw new Error(`api_${response.status}`)
+  return response.json()
+}
 async function health() {
   let api = { ok: false, error: 'unreachable' }
   try {
@@ -310,6 +317,13 @@ const readTools = [
     disclosure: enumProp(['context', 'full']),
   }),
   tool('list_open_judgments', '結果待ちの判断記録を一覧する', {}),
+  tool('get_facts', '覚えたこと（人・締切・決定・案件）を取得する。根拠つきで自動抽出された事実のみ', {
+    type: enumProp(['person', 'deadline', 'decision', 'project']), query: { type: 'string', maxLength: 300 },
+    limit: { type: 'integer', minimum: 1, maximum: 100 }, disclosure: enumProp(['intent', 'context', 'full']),
+  }),
+  tool('get_handoff', '質問に関係する記憶カード（facts＋タスク）をAIへ渡す形で取得する', {
+    query: { type: 'string', maxLength: 500 }, limit: { type: 'integer', minimum: 1, maximum: 12 },
+  }, ['query']),
 ]
 const writeTools = [
   tool('save_memory', 'ユーザーが明示した事実・好み・指示・メモをMemoriaへ永続保存する', {
@@ -348,6 +362,8 @@ async function dispatch(name, args) {
     }
     case 'get_current_activity': return { disclosure: disclosureLevel(args.disclosure || 'context'), activity: screenContext(disclosureLevel(args.disclosure || 'context')) }
     case 'list_open_judgments': return readJSONL(openJudgmentsPath)
+    case 'get_facts': return apiGet('/facts', { type: args.type || '', q: optionalString(args, 'query', 300), limit: args.limit || 20, disclosure: args.disclosure || 'context' })
+    case 'get_handoff': return apiGet('/handoff', { q: requiredString(args, 'query', 500), limit: args.limit || 5 })
     case 'save_memory': return saveMemory(args)
     case 'record_judgment': return recordJudgment(args)
     case 'close_judgment': return closeJudgment(args)

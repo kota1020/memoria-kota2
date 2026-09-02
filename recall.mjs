@@ -23,7 +23,7 @@ export function recall(query, limit = 8) {
   }).sort((a, b) => b.score - a.score).slice(0, limit).map(({ it, score }) => ({
     score,
     kind: it.kind,
-    tag: it.kind === 'open' ? 'open' : it.kind === 'task' ? it.ref.status : `claim:${it.ref.type}`,
+    tag: it.kind === 'open' ? 'open' : it.kind === 'task' ? it.ref.status : it.kind === 'fact' ? `fact:${it.ref.type}` : `claim:${it.ref.type}`,
     text: it.text,
     ref: it.ref,
   }))

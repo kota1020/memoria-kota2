@@ -1,6 +1,7 @@
 // memoria kota v2 — 常駐デーモン（直近だけ常時翻訳・因果ストリーミング）
 // 10分ごと: 新イベントがあれば「前回以降＋持ち越し状態」を翻訳し、
 //   tasks/current-tasks.md（注入用メモ）/ tasks/tasks-index.jsonl（完了タスクの索引）/ state/open-tasks.json を更新。
+//   同じ呼び出しから facts（人・締切・決定・案件）も取り、state/facts.json（生きている記憶）へ統合。
 // 新イベントゼロ or ユーザー不在なら claude を呼ばない（コスト最小の芯）。
 import { readFileSync, writeFileSync, appendFileSync, mkdirSync, renameSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -8,6 +9,7 @@ import path from 'node:path'
 import { loadEvents, renderEvents } from './parser/render.mjs'
 import { interpret } from './parser/interpret.mjs'
 import { daySummary } from './recall.mjs'
+import { ingestFacts, loadLive, renderFactsSection } from './parser/facts.mjs'
 
 const dir = path.dirname(fileURLToPath(import.meta.url))
 const STATE = path.join(dir, 'state/open-tasks.json')
@@ -86,7 +88,7 @@ ${open || '- （なし）'}
 
 ## 直近に完了/中断したタスク
 ${closed || '- （なし）'}
-${nudges.length ? `\n## 先回り（そっと差し出す・押し付けない）\n${nudges.join('\n')}` : ''}${todayLine()}
+${nudges.length ? `\n## 先回り（そっと差し出す・押し付けない）\n${nudges.join('\n')}` : ''}${todayLine()}${renderFactsSection(loadLive())}
 `)
 }
 
@@ -103,10 +105,11 @@ async function tick() {
   try {
     const r = await interpret({ eventsText: renderEvents(events), openTasks: state.open_tasks, mode: 'stream', windowLabel })
     for (const t of r.closed_tasks) appendFileSync(INDEX, JSON.stringify({ ...t, closed_at: new Date().toISOString() }) + '\n')
+    const facts = ingestFacts(r.facts ?? [], { baseISO: new Date(events.at(-1).t).toISOString() }).facts
     const next = { open_tasks: r.open_tasks, last_processed: events.at(-1).t, updated: new Date().toISOString() }
     writeFileSync(STATE + '.tmp', JSON.stringify(next, null, 1)); renameSync(STATE + '.tmp', STATE)
     writeMemo(next, r.closed_tasks)
-    log(`ok: open=${r.open_tasks.length} closed=${r.closed_tasks.length}${r.dropped?.length ? ` grounding-dropped=${r.dropped.length}` : ''}`)
+    log(`ok: open=${r.open_tasks.length} closed=${r.closed_tasks.length} facts=${facts.length}${r.dropped?.length ? ` grounding-dropped=${r.dropped.length}` : ''}`)
   } catch (e) {
     log(`ERROR: ${e.message}`)  // 失敗時はlast_processedを進めない＝次回リトライ
   }

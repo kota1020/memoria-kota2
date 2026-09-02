@@ -3,12 +3,13 @@
 //   node ondemand.mjs "2026-08-28 15:00" "2026-08-28 17:00"   (JSTで指定)
 //   node ondemand.mjs --hours 3        (直近3時間)
 //   node ondemand.mjs --yesterday
-// 結果は表示し、tasks/tasks-index.jsonl にも追記（source:"ondemand"）。
+// 結果は表示し、tasks/tasks-index.jsonl にも追記（source:"ondemand"）。facts も state/facts.json へ統合。
 import { appendFileSync, mkdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { loadEvents, renderEvents } from './parser/render.mjs'
 import { interpret } from './parser/interpret.mjs'
+import { ingestFacts } from './parser/facts.mjs'
 
 const dir = path.dirname(fileURLToPath(import.meta.url))
 const INDEX = path.join(dir, 'tasks/tasks-index.jsonl')
@@ -27,6 +28,7 @@ else if (args[0] === '--yesterday') {
 
 const CHUNK = 45 * 60e3  // ラボと同じ45分単位で刻む
 const all = []
+const allFacts = []
 for (let s = from; s < to; s += CHUNK) {
   const e = Math.min(s + CHUNK, to)
   const events = loadEvents(s, e)
@@ -35,6 +37,8 @@ for (let s = from; s < to; s += CHUNK) {
   process.stderr.write(`interpreting ${windowLabel} (${events.length} events)...\n`)
   const r = await interpret({ eventsText: renderEvents(events), mode: 'hindsight', windowLabel })
   all.push(...r.closed_tasks)
+  const got = ingestFacts(r.facts ?? [], { baseISO: new Date(e).toISOString(), source: 'ondemand' }).facts
+  allFacts.push(...got)
 }
 for (const t of all) appendFileSync(INDEX, JSON.stringify({ ...t, source: 'ondemand', closed_at: new Date().toISOString() }) + '\n')
-console.log(JSON.stringify({ tasks: all }, null, 1))
+console.log(JSON.stringify({ tasks: all, facts: allFacts }, null, 1))

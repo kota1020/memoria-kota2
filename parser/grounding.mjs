@@ -44,7 +44,7 @@ export function isGrounded(task, logNorm) {
 // {open_tasks, closed_tasks} を接地フィルタ。無根拠タスクは落とし、droppedに理由付きで返す。
 // MEMORIA2_GROUNDING=off で無効化（実験用）。
 export function enforceGrounding(result, eventsText) {
-  if (process.env.MEMORIA2_GROUNDING === 'off') return { ...result, dropped: [] }
+  if (process.env.MEMORIA2_GROUNDING === 'off') return { open_tasks: result.open_tasks ?? [], closed_tasks: result.closed_tasks ?? [], facts: result.facts ?? [], dropped: [] }
   const logNorm = norm(eventsText)
   const dropped = []
   const keep = (arr, bucket) => (arr ?? []).filter(t => {
@@ -55,6 +55,8 @@ export function enforceGrounding(result, eventsText) {
   return {
     open_tasks: keep(result.open_tasks, 'open'),
     closed_tasks: keep(result.closed_tasks, 'closed'),
+    // facts（人・締切・決定）も同じ網。人名や日付は「それっぽく発明」されやすいので、タスク以上に必須
+    facts: keep(result.facts, 'fact'),
     dropped,
   }
 }

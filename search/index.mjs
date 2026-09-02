@@ -1,5 +1,5 @@
 // 意味索引の構築（mem0/Memory Bank方式のローカル版）
-// 対象: 翻訳済みタスク（index+open） + knowledge/LEARNED.md のclaim
+// 対象: 翻訳済みタスク（index+open） + facts（人・締切・決定） + knowledge/LEARNED.md のclaim
 //       + knowledge/all.jsonl の明示メモ/判断記録
 // 出力: search/index.json {items:[{kind,text,ref,vec}]}（gitignore対象）
 import { readFileSync, writeFileSync, existsSync, renameSync } from 'node:fs'
@@ -18,6 +18,8 @@ export function collectItems() {
     try { const t = JSON.parse(l); items.push({ kind: 'task', text: `${t.name} ${t.goal ?? ''}`, ref: { name: t.name, status: t.status, spans: t.spans } }) } catch {}
   }
   try { for (const t of JSON.parse(read('state/open-tasks.json')).open_tasks ?? []) items.push({ kind: 'open', text: `${t.name} ${t.goal ?? ''}`, ref: { name: t.name, status: t.status, last_active: t.last_active } }) } catch {}
+  // 覚えたこと（人・締切・決定・案件）。言い換え検索で「例の件」→案件名が当たるように
+  try { for (const f of JSON.parse(read('state/facts.json')).facts ?? []) items.push({ kind: 'fact', text: `${f.value} ${f.detail ?? ''}${f.when ? ' ' + f.when : ''}`, ref: { type: f.type, value: f.value, when: f.when, last_seen: f.last_seen } }) } catch {}
   for (const l of read('knowledge/LEARNED.md').split('\n')) {
     const m = l.match(/^- \[(事実|決定|好み|手法|失敗)\] (.+)/)
     if (m) items.push({ kind: 'claim', text: m[2].slice(0, 300), ref: { type: m[1] } })

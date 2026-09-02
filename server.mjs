@@ -14,6 +14,8 @@
 //   GET /recall?q=...&limit=8         意味検索（言い換えでも当たる）
 //   GET /at?t=2026-09-01T19:16:00     指定時刻に走っていたタスク（JST）
 //   GET /context                      今の注入コンテキスト（画面メモ＋タスク）をまとめて
+//   GET /facts?type=&q=&limit=        覚えたこと（人・締切・決定・案件。根拠つきで抽出済み）
+//   GET /handoff?q=&limit=&ai=        AIへ渡す記憶カード（質問に関係するfacts＋タスク）。拡張の「渡す前の確認」が使う
 //   全エンドポイント共通クエリ: ?disclosure=intent|context|full （既定 context）
 //
 // 開示ダイヤル（disclosure）:
@@ -25,6 +27,7 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { recall, tasksAt, daySummary } from './recall.mjs'
+import { loadLive, factsFor, factLine } from './parser/facts.mjs'
 
 const dir = path.dirname(fileURLToPath(import.meta.url))
 const PORT = Number(process.env.MEMORIA2_API_PORT || 4319)
@@ -62,10 +65,39 @@ function screenSummary(level) {
   return lines.slice(0, 8)
 }
 
+const EXT_ORIGIN = /^(chrome-extension|moz-extension|safari-web-extension):\/\//
+function corsHeaders(req) {
+  const o = req.headers.origin || ''
+  return EXT_ORIGIN.test(o) ? { 'access-control-allow-origin': o, 'access-control-allow-headers': 'authorization', 'vary': 'origin' } : {}
+}
+let CORS = {}
 function send(res, code, body) {
   const s = JSON.stringify(body)
-  res.writeHead(code, { 'content-type': 'application/json; charset=utf-8', 'content-length': Buffer.byteLength(s), 'cache-control': 'no-store' })
+  res.writeHead(code, { 'content-type': 'application/json; charset=utf-8', 'content-length': Buffer.byteLength(s), 'cache-control': 'no-store', ...CORS })
   res.end(s)
+}
+
+// 記憶カード: 拡張が「この3件を渡します」と見せ、OKされた分だけAIの入力欄へ足す。
+// 優先: 質問語に当たるfacts → 未来の締切 → いま走行中のタスク → 意味検索で当たったタスク。合計limit件。
+function handoffCards(q, limit, level) {
+  const live = loadLive()
+  const cards = []
+  const seen = new Set()
+  const push = (c) => { if (!seen.has(c.id) && cards.length < limit) { seen.add(c.id); cards.push(c) } }
+  for (const f of factsFor(q, live, { limit })) push({ id: `fact:${f.key}`, kind: 'fact', type: f.type, title: factLine(f), text: f.detail || '', when: f.when, last_seen: f.last_seen, score: f.score })
+  const qn = q.trim().toLowerCase()
+  const open = openTasks()
+  for (const t of open) {
+    if (!qn || `${t.name} ${t.goal || ''}`.toLowerCase().includes(qn) || cards.length < 2) push({ id: `open:${t.name}`, kind: 'task', status: t.status, title: `いま：${t.name.slice(0, 80)}`, text: level >= 1 ? (t.goal || '').slice(0, 120) : '', last_active: t.last_active })
+  }
+  if (qn) {
+    for (const h of recall(q, 8)) {
+      if (h.score < 0.4) break
+      if (h.kind === 'fact') continue  // factsFor で拾い済み
+      push({ id: `${h.kind}:${h.text.slice(0, 60)}`, kind: h.kind === 'claim' || h.kind === 'memory' ? 'memory' : 'task', status: h.ref?.status, title: h.text.slice(0, 90), text: '', score: Number(h.score.toFixed(3)) })
+    }
+  }
+  return cards
 }
 
 const server = createServer((req, res) => {
@@ -74,6 +106,8 @@ const server = createServer((req, res) => {
       const auth = req.headers.authorization || ''
       if (auth !== `Bearer ${TOKEN}`) return send(res, 401, { error: 'unauthorized' })
     }
+    CORS = corsHeaders(req)
+    if (req.method === 'OPTIONS') { res.writeHead(204, { ...CORS, 'access-control-allow-methods': 'GET, OPTIONS' }); return res.end() }
     const url = new URL(req.url, `http://${req.headers.host}`)
     const level = LEVELS[url.searchParams.get('disclosure')] ?? LEVELS.context
     const p = url.pathname
@@ -104,16 +138,34 @@ const server = createServer((req, res) => {
       return send(res, 200, { date: jst, total_min: rows.reduce((s, r) => s + r.mins, 0), tasks: rows })
     }
 
+    if (p === '/facts') {  // 覚えたこと（人・締切・決定・案件）
+      const type = url.searchParams.get('type') || ''
+      const q = url.searchParams.get('q') || ''
+      const limit = Math.min(Number(url.searchParams.get('limit') || 20), 100)
+      const live = loadLive()
+      let rows = q ? factsFor(q, live, { limit }) : (live.facts ?? []).slice(0, limit)
+      if (type) rows = rows.filter(f => f.type === type)
+      return send(res, 200, { updated: live.updated, facts: rows.map(f => ({ type: f.type, value: f.value, detail: f.detail, when: f.when, line: factLine(f), last_seen: f.last_seen, count: f.count, ...(level >= 2 ? { evidence: f.evidence, task_ids: f.task_ids } : {}) })) })
+    }
+
+    if (p === '/handoff') {  // AIへ渡す記憶カード（拡張の「渡す前の確認」パネルが読む）
+      const q = url.searchParams.get('q') || ''
+      const limit = Math.min(Number(url.searchParams.get('limit') || 5), 12)
+      const cards = handoffCards(q, limit, level)
+      return send(res, 200, { q, ai: url.searchParams.get('ai') || null, cards, ts: new Date().toISOString() })
+    }
+
     if (p === '/context') {
       return send(res, 200, {
         disclosure: url.searchParams.get('disclosure') || 'context',
         tasks: openTasks().map(t => shapeTask(t, level)),
         screen: screenSummary(level),
+        facts: factsFor('', loadLive(), { limit: 8 }).map(f => factLine(f)),
         ts: new Date().toISOString(),
       })
     }
 
-    return send(res, 404, { error: 'not found', endpoints: ['/health', '/tasks', '/recall?q=', '/at?t=', '/day?date=', '/context'] })
+    return send(res, 404, { error: 'not found', endpoints: ['/health', '/tasks', '/recall?q=', '/at?t=', '/day?date=', '/context', '/facts?type=&q=', '/handoff?q='] })
   } catch (e) {
     send(res, 500, { error: String(e && e.message || e) })
   }
