@@ -60,6 +60,18 @@ curl localhost:4319/context           # 今の注入コンテキストをまと�
 
 認証は既定で無し（localhost束縛のみ）。`MEMORIA2_API_TOKEN` を設定すると `Authorization: Bearer <token>` 必須になる。外部公開は `MEMORIA2_API_HOST=0.0.0.0` を明示した時だけ。
 
+## MCPとLLM起動ガード
+
+`mcp-server.mjs` は現行Kota v2のタスク・画面文脈・意味検索をMCPとして公開し、明示メモと判断記録の保存にも対応する。旧Memoria SQLiteは参照しない。クライアントごとの許可scopeは `~/Library/Application Support/Memoria/mcp.json` で管理する。
+
+```bash
+node llm-connection.mjs status all    # Codex / Claude Code / Kimiの接続確認
+node llm-connection.mjs connect all   # 許可済みprofileの登録を復旧し、実際にhealth probe
+node llm-connection.mjs authorize all # 明示操作で全read/write scopeを許可して接続
+```
+
+`llm-launch-guard.zsh` を対話シェルから読み込むと、`codex` / `claude` / `kimi` / `herdr` の起動直前に接続を検査する。未接続ならmacOSの「Memoriaへ接続しますか？」ダイアログを出し、「はい」で許可済みprofileの登録だけを復旧・再検証し、「いいえ」またはEscなら接続せずLLMの起動を続行する。ポップアップからscopeを追加することはない。同時起動時はポップアップを1つにまとめる。無効化は `MEMORIA_CONNECTION_GUARD_DISABLE=1`。
+
 ## 使い方
 
 ```bash
@@ -81,6 +93,8 @@ export MEMORIA_SRC_LOG=~/path/to/activity-log.jsonl   # あなたの観測層の
 - `ondemand.mjs` — 過去区間を45分刻みで翻訳（`--hours 3` / `--yesterday` / JST範囲指定）
 - `recall.mjs` — 意味検索。CLIとしても、read APIのライブラリ（`recall()`/`tasksAt()`）としても使える（`--rebuild`で索引再構築 / `--at "JST"`で時刻検索）
 - `server.mjs` — read API（読）。外部アプリ/エージェントがタスク・文脈・意味検索を問い合わせる常駐サービス。開示ダイヤル付き
+- `mcp-server.mjs` / `memoria-mcp` — Kota v2を各LLMへ渡すローカルstdio MCPサーバーと安定ランチャー
+- `llm-connection.mjs` / `llm-launch-guard.zsh` — MCPの登録・実接続確認と、LLM起動直前の接続ポップアップ
 - `consolidate.mjs` — 統合・忘却パス（重複マージ＋矛盾検出→蛇口注入）
 - `faucet/` — 蛇口。pour.mjs（注ぎ口）と faucet.sh（会話への注入）
 - `inject.sh` — 翻訳済みタスクのプロンプト注入（30分鮮度ゲート）

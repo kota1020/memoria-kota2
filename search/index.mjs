@@ -1,7 +1,8 @@
 // 意味索引の構築（mem0/Memory Bank方式のローカル版）
 // 対象: 翻訳済みタスク（index+open） + knowledge/LEARNED.md のclaim
+//       + knowledge/all.jsonl の明示メモ/判断記録
 // 出力: search/index.json {items:[{kind,text,ref,vec}]}（gitignore対象）
-import { readFileSync, writeFileSync, existsSync } from 'node:fs'
+import { readFileSync, writeFileSync, existsSync, renameSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
@@ -21,6 +22,20 @@ export function collectItems() {
     const m = l.match(/^- \[(事実|決定|好み|手法|失敗)\] (.+)/)
     if (m) items.push({ kind: 'claim', text: m[2].slice(0, 300), ref: { type: m[1] } })
   }
+  // 同じ judgment id は open → closed の順で複数行になる。最後の状態だけを採る。
+  const durable = new Map()
+  for (const l of read('knowledge/all.jsonl').trim().split('\n')) {
+    if (!l) continue
+    try {
+      const row = JSON.parse(l)
+      const durableType = String(row.type || '')
+      if (!durableType.startsWith('explicit-') && !durableType.startsWith('judgment')) continue
+      const meta = typeof row.meta === 'string' ? JSON.parse(row.meta) : (row.meta ?? {})
+      const key = meta.id || `${row.ts ?? ''}:${row.title ?? ''}:${durable.size}`
+      durable.set(key, { kind: 'memory', text: `${row.title ?? ''} ${row.text ?? ''}`.trim().slice(0, 4000), ref: { id: meta.id, type: row.type, source: row.source, ts: row.ts } })
+    } catch {}
+  }
+  items.push(...durable.values())
   return items
 }
 
@@ -42,7 +57,10 @@ export function buildIndex() {
   const items = collectItems()
   const vecs = embed(items.map(i => i.text))
   const index = { built: new Date().toISOString(), engine: vecs ? 'apple-nl' : 'bigram', items: items.map((it, i) => ({ ...it, vec: vecs ? vecs[i] : null })) }
-  writeFileSync(path.join(dir, 'index.json'), JSON.stringify(index))
+  const indexPath = path.join(dir, 'index.json')
+  const tmp = `${indexPath}.${process.pid}.tmp`
+  writeFileSync(tmp, JSON.stringify(index), { mode: 0o600 })
+  renameSync(tmp, indexPath)
   return index
 }
 

@@ -1,0 +1,10 @@
+#!/bin/sh
+# Stable managed launcher. Both this file and mcp-server.mjs are copied to the
+# Memoria application support directory, so GUI clients do not depend on PATH.
+set -eu
+managed_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+if [ -z "${MEMORIA_KOTA_ROOT:-}" ]; then
+  MEMORIA_KOTA_ROOT=/Users/kota2m/memoria-kota2
+  export MEMORIA_KOTA_ROOT
+fi
+exec /opt/homebrew/bin/node "$managed_dir/mcp-server.mjs" "$@"
